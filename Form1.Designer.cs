@@ -28,18 +28,27 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.PCT_CANVAS = new System.Windows.Forms.PictureBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.PCT_CANVAS)).BeginInit();
             this.SuspendLayout();
             // 
             // PCT_CANVAS
             // 
+            this.PCT_CANVAS.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.PCT_CANVAS.Dock = System.Windows.Forms.DockStyle.Top;
             this.PCT_CANVAS.Location = new System.Drawing.Point(0, 0);
             this.PCT_CANVAS.Name = "PCT_CANVAS";
             this.PCT_CANVAS.Size = new System.Drawing.Size(800, 385);
             this.PCT_CANVAS.TabIndex = 0;
             this.PCT_CANVAS.TabStop = false;
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 40;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // Form1
             // 
@@ -57,5 +66,6 @@
         #endregion
 
         private PictureBox PCT_CANVAS;
+        private System.Windows.Forms.Timer timer1;
     }
 }
