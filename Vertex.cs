@@ -13,5 +13,12 @@ namespace _3D_Engine_1._0
         {
             
         }
+
+        public override string ToString()
+        {
+            string output = X+", "+Y+", "+Z;
+
+            return output;
+        }
     }
 }

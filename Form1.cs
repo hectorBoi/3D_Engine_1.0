@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 
 namespace _3D_Engine_1._0
@@ -6,63 +7,60 @@ namespace _3D_Engine_1._0
     {
         static Bitmap bmp;
         static Graphics g;
-        float Wx, Hy, angle;
+        float Wx, Hy, fThetaX, fThetaY;
         Point3D centroid;
         Vertex v1, v2, v3, v4;
-        Matrix2D matProj;
+        Matrix2D matProj, matRotX, matRotY, matRotZ;
+        const float radian = 0.0174533f;
+        const float pi = 3.14159265359f;
+        float angle;
         Mesh meshCube;
-
-        
-
+        List<Vertex> puntosSphere;
 
         public struct Point3D
         {
             public float X, Y, Z;
         }
 
-        struct Triangle
+        public struct Triangle
         {
             public Vertex[] Vertices;
         }
 
-        struct Mesh
+        public struct Mesh
         {
             public Triangle[] triangles;
         }
         
-        Point3D a, b, c, d = new Point3D();
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if (angle > 360)
-                angle = 360;
 
-            if (angle < -360)
+
+            //bool valid = float.TryParse(angleTextBox.Text, out angle);
+
+            
+            if (angle >= 360)
+            {
                 angle = 0;
-            angle++;
-            /*
-            p1 = new PointF(p1.X - centroid2.X, p1.Y - centroid2.Y);
-            p2 = new PointF(p2.X - centroid2.X, p2.Y - centroid2.Y);
-            p3 = new PointF(p3.X - centroid2.X, p3.Y - centroid2.Y);
-            p4 = new PointF(p4.X - centroid2.X, p4.Y - centroid2.Y);
+            }
+            angle += 3.0f;
 
-            angle = (float)1.5708;
-            p1 = rotation(p1, angle);
-            p2 = rotation(p2, angle);
-            p3 = rotation(p3, angle);
-            p4 = rotation(p4, angle);
+            fThetaX = angle * radian;
 
-            p1 = new PointF(p1.X + centroid2.X, p1.Y + centroid2.Y);
-            p2 = new PointF(p2.X + centroid2.X, p2.Y + centroid2.Y);
-            p3 = new PointF(p3.X + centroid2.X, p3.Y + centroid2.Y);
-            p4 = new PointF(p4.X + centroid2.X, p4.Y + centroid2.Y);
-            */
+            matRotX.matrix[0, 0] = 1;
+            matRotX.matrix[1, 1] = (float)Math.Cos(fThetaX);
+            matRotX.matrix[1, 2] = (float)-Math.Sin(fThetaX);
+            matRotX.matrix[2, 1] = (float)Math.Sin(fThetaX);
+            matRotX.matrix[2, 2] = (float)Math.Cos(fThetaX);
 
-
+            matRotZ.matrix[0, 0] = (float)Math.Cos(fThetaX);
+            matRotZ.matrix[0, 1] = (float)-Math.Sin(fThetaX);
+            matRotZ.matrix[1, 0] = (float)Math.Sin(fThetaX);
+            matRotZ.matrix[1, 1] = (float)Math.Cos(fThetaX);
+            matRotZ.matrix[2, 2] = 1;
             Render();
         }
-
-        PointF p1, p2, p3, p4, centroid2 = new PointF();
 
         
         public Form1()
@@ -72,32 +70,10 @@ namespace _3D_Engine_1._0
             Wx = bmp.Width/2;
             Hy = bmp.Height/2;
             matProj = new Matrix2D();
-
+            matRotX = new Matrix2D();
+            matRotZ = new Matrix2D();
             g = Graphics.FromImage(bmp);
             PCT_CANVAS.Image = bmp;
-            a.X = 0;
-            a.Y = 0;
-            a.Z = 0;
-
-            b.X = 0;
-            b.Y = 100;
-            b.Z = 0;
-
-            c.X = 100;
-            c.Y = 100;
-
-            d.X = 100;
-            d.Y = 0;
-
-            centroid.X = 50;
-            centroid.Y = 50;
-
-            centroid2 = normalize(centroid);
-
-            p1 = normalize(a);
-            p2 = normalize(b);
-            p3 = normalize(c);
-            p4 = normalize(d);
 
             Init();
 
@@ -106,111 +82,147 @@ namespace _3D_Engine_1._0
 
         private void Init()
         {
+            Sphere(1, 21);
+            map(0, 0, 10, -pi, pi);
+            angle = 2;
+            fThetaX = 0;
             //Projection Matrix
-            float fNear = 0.1f;
-            float fFar = 1000.0f;
-            float fFov = 90.0f;
-            float fAspectRatio = bmp.Height / bmp.Width;
-            float fFovRad = 1.0f / (float)Math.Tan(fFov * 0.5f / 180.0f * 3.14159f);
+            
+            matProj.matrix[0, 0] = 1;
+            matProj.matrix[1, 1] = 1;
 
-            matProj.matrix[0, 0] = fAspectRatio * fFovRad;
-            matProj.matrix[1, 1] = fFovRad;
-            matProj.matrix[2, 2] = fFar / (fFar - fNear);
-            matProj.matrix[3, 2] = (-fFar * fNear) / (fFar - fNear);
-            matProj.matrix[2, 3] = 1.0f;
-            matProj.matrix[3, 3] = 0.0f;
+            //Rotation Matrix Z
+            matRotZ.matrix[0, 0] = (float)Math.Cos(fThetaX);
+            matRotZ.matrix[0, 1] = (float)-Math.Sin(fThetaX);
+            matRotZ.matrix[1, 0] = (float)Math.Sin(fThetaX);
+            matRotZ.matrix[1, 1] = (float)Math.Cos(fThetaX);
+            matRotZ.matrix[2, 2] = 1;
+
+            //Rotation Matrix X
+            matRotX.matrix[0, 0] = 1;
+            matRotX.matrix[1, 1] = (float)Math.Cos(fThetaX);
+            matRotX.matrix[1, 2] = (float)-Math.Sin(fThetaX);
+            matRotX.matrix[2, 1] = (float)Math.Sin(fThetaX);
+            matRotX.matrix[2, 2] = (float)Math.Cos(fThetaX);
+
 
             //Cube Declaration
-            Vertex v1 = new Vertex() { X = 0.0f, Y = 0.0f, Z = 0.0f };
-            Vertex v2 = new Vertex() { X = 0.0f, Y = 1.0f, Z = 0.0f };
-            Vertex v3 = new Vertex() { X = 1.0f, Y = 1.0f, Z = 0.0f };
-            Vertex v4 = new Vertex() { X = 1.0f, Y = 0.0f, Z = 0.0f };
-            Vertex v5 = new Vertex() { X = 1.0f, Y = 1.0f, Z = 1.0f };
-            Vertex v6 = new Vertex() { X = 1.0f, Y = 0.0f, Z = 1.0f };
-            Vertex v7 = new Vertex() { X = 0.0f, Y = 1.0f, Z = 1.0f };
-            Vertex v8 = new Vertex() { X = 0.0f, Y = 0.0f, Z = 1.0f };
+            Vertex aV = new Vertex() {X = 1, Y = 1, Z = 1};
+            Vertex bV = new Vertex() { X = -1, Y = 1, Z = 1 };
+            Vertex cV = new Vertex() { X = -1, Y = -1, Z = 1 };
+            Vertex dV = new Vertex() { X = 1, Y = -1, Z = 1 };
+            Vertex eV = new Vertex() { X = 1, Y = 1, Z = -1 };
+            Vertex fV = new Vertex() { X = -1, Y = 1, Z = -1 };
+            Vertex gV = new Vertex() { X = -1, Y = -1, Z = -1 };
+            Vertex hV = new Vertex() { X = 1, Y = -1, Z = -1 };
 
-            Triangle t1  = new Triangle() { Vertices = new Vertex[] { v1, v2, v3 } };
-            Triangle t2  = new Triangle() { Vertices = new Vertex[] { v1, v3, v4 } };
-            Triangle t3  = new Triangle() { Vertices = new Vertex[] { v4, v3, v5 } };
-            Triangle t4  = new Triangle() { Vertices = new Vertex[] { v4, v5, v6 } };
-            Triangle t5  = new Triangle() { Vertices = new Vertex[] { v6, v5, v7 } };
-            Triangle t6  = new Triangle() { Vertices = new Vertex[] { v6, v7, v8 } };
-            Triangle t7  = new Triangle() { Vertices = new Vertex[] { v8, v7, v2 } };
-            Triangle t8  = new Triangle() { Vertices = new Vertex[] { v8, v2, v1 } };
-            Triangle t9  = new Triangle() { Vertices = new Vertex[] { v2, v7, v5 } };
-            Triangle t10 = new Triangle() { Vertices = new Vertex[] { v2, v5, v3 } };
-            Triangle t11 = new Triangle() { Vertices = new Vertex[] { v8, v1, v4 } };
-            Triangle t12 = new Triangle() { Vertices = new Vertex[] { v8, v6, v4 } };
+            Triangle t1 = new Triangle() {Vertices = new Vertex[] {aV, bV, cV} };
+            Triangle t2 = new Triangle() { Vertices = new Vertex[] { aV, cV, dV } };
 
-            meshCube = new Mesh() {triangles = new Triangle[] {t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12} };
-        }
-
-        public PointF normalize(Point3D point)
-        {
-            PointF point2 = new PointF(point.X+Wx, -point.Y+Hy);
-            return point2;
-        }
-
-
-        public PointF rotation(PointF point, float angle)
-        {
-            if (angle > 360)
-                angle = 360;
-
-            if (angle < -360)
-                angle = 0;
-
-            PointF point2 = new PointF();
-            angle = angle / 57.2958f;
-
-            point2.X = (float)((point.X * Math.Cos(angle)) - (point.Y * Math.Sin(angle)));
-            point2.Y = (float)((point.X * Math.Sin(angle)) + (point.Y * Math.Cos(angle)));
-            return point2;
+            Triangle t3 = new Triangle() { Vertices = new Vertex[] { eV, aV, dV } };
+            Triangle t4 = new Triangle() { Vertices = new Vertex[] { eV, dV, hV } };
+            Triangle t5 = new Triangle() { Vertices = new Vertex[] { fV, eV, hV } };
+            Triangle t6 = new Triangle() { Vertices = new Vertex[] { fV, hV, gV } };
+            Triangle t7 = new Triangle() { Vertices = new Vertex[] { bV, fV, gV } };
+            Triangle t8 = new Triangle() { Vertices = new Vertex[] { bV, gV, cV } };
+            Triangle t9 = new Triangle() { Vertices = new Vertex[] { eV, fV, bV } };
+            Triangle t10 = new Triangle() { Vertices = new Vertex[] { eV, bV, aV } };
+            Triangle t11 = new Triangle() { Vertices = new Vertex[] { cV, gV, hV } };
+            Triangle t12 = new Triangle() { Vertices = new Vertex[] { cV, hV, dV } };
+            
+            meshCube = new Mesh() { triangles = new Triangle[] { t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12 } };
         }
 
         public void Render()
         {
             g.Clear(Color.Black);
-            /*
-            g.DrawLine(Pens.Magenta, p1, p2);
-            g.DrawLine(Pens.Magenta, p2, p3);
-            g.DrawLine(Pens.Magenta, p3, p4);
-            g.DrawLine(Pens.Magenta, p4, p1);
-            */
-            DrawSquare();
+            //DrawSquare();
+            DrawSphere();
+
             PCT_CANVAS.Invalidate();
+
         }
 
+        public void DrawSphere()
+        {
+            List<Vertex> vertices2 = new List<Vertex>();
+            for (int i = 0; i<puntosSphere.Count; i++)
+            {
+                vertices2.Add(matRotZ.multiplyMatrixVector(puntosSphere[i]));
+                vertices2[i] = matRotX.multiplyMatrixVector(vertices2[i]);
+                vertices2[i] = (projection(vertices2[i]));
+                vertices2[i] = (scale(vertices2[i], 300));
+                vertices2[i] = (TranslateToO(vertices2[i]));
+                
+                g.FillRectangle(Brushes.Lime, vertices2[i].X, vertices2[i].Y, 4, 4);
+            }
+        }
         public void DrawSquare()
         {
-            foreach(Triangle triangle in meshCube.triangles)
+            for(int i = 0; i<meshCube.triangles.Length;i++)
             {
-                Triangle triProj;
-                triProj = new Triangle();
-                triProj.Vertices = new Vertex[3];
-                triProj.Vertices[0] = matProj.multiplyMatrixVector(triangle.Vertices[0]);
-                triProj.Vertices[1] = matProj.multiplyMatrixVector(triangle.Vertices[1]);
-                triProj.Vertices[2] = matProj.multiplyMatrixVector(triangle.Vertices[2]);
+                Triangle triProj, triRot, triangle;
+                triangle = meshCube.triangles[i];
+                //Rotate on X
+                triRot = new Triangle();
+                triRot.Vertices = new Vertex[3];
 
-                //Scale to view
-                triProj.Vertices[0].X += 1.0f; triProj.Vertices[0].Y += 1.0f;
-                triProj.Vertices[1].X += 1.0f; triProj.Vertices[1].Y += 1.0f;
-                triProj.Vertices[2].X += 1.0f; triProj.Vertices[2].Y += 1.0f;
+                
+                triRot.Vertices[0] = matRotX.multiplyMatrixVector(triangle.Vertices[0]);
+                triRot.Vertices[1] = matRotX.multiplyMatrixVector(triangle.Vertices[1]);
+                triRot.Vertices[2] = matRotX.multiplyMatrixVector(triangle.Vertices[2]);
+                
+                triRot.Vertices[0] = matRotZ.multiplyMatrixVector(triRot.Vertices[0]);
+                triRot.Vertices[1] = matRotZ.multiplyMatrixVector(triRot.Vertices[1]);
+                triRot.Vertices[2] = matRotZ.multiplyMatrixVector(triRot.Vertices[2]);
+                
 
-                triProj.Vertices[0].X *= 0.5f * (float)PCT_CANVAS.Width;
-                triProj.Vertices[0].Y *= 0.5f * (float)PCT_CANVAS.Height;
-                triProj.Vertices[1].X *= 0.5f * (float)PCT_CANVAS.Width;
-                triProj.Vertices[1].Y *= 0.5f * (float)PCT_CANVAS.Height;
-                triProj.Vertices[2].X *= 0.5f * (float)PCT_CANVAS.Width;
-                triProj.Vertices[2].Y *= 0.5f * (float)PCT_CANVAS.Height;
+                if (getNormal(triRot.Vertices).Z < 0)
+                {
+                    //2D from here--------------------------------------
+                    triProj = new Triangle();
+                    triProj.Vertices = new Vertex[3];
+                    triProj.Vertices[0] = projection(triRot.Vertices[0]);
+                    triProj.Vertices[1] = projection(triRot.Vertices[1]);
+                    triProj.Vertices[2] = projection(triRot.Vertices[2]);
 
-                DrawTriangle(triProj.Vertices[0].X, triProj.Vertices[0].Y,
-                     triProj.Vertices[1].X, triProj.Vertices[1].Y,
-                     triProj.Vertices[2].X, triProj.Vertices[2].Y);
+                    triProj.Vertices[0] = scale(triProj.Vertices[0], 300f);
+                    triProj.Vertices[1] = scale(triProj.Vertices[1], 300f);
+                    triProj.Vertices[2] = scale(triProj.Vertices[2], 300f);
+
+                    triProj.Vertices[0] = TranslateToO(triProj.Vertices[0]);
+                    triProj.Vertices[1] = TranslateToO(triProj.Vertices[1]);
+                    triProj.Vertices[2] = TranslateToO(triProj.Vertices[2]);
+
+                    DrawTriangle(triProj.Vertices[0].X, triProj.Vertices[0].Y,
+                            triProj.Vertices[1].X, triProj.Vertices[1].Y,
+                            triProj.Vertices[2].X, triProj.Vertices[2].Y);
+                    
+                    //g.DrawLine(Pens.Yellow, triCentr.X, triCentr.Y, normal.X, normal.Y);
+                }
+
             }
 
+        }
 
+        public Vertex projection(Vertex vertice)
+        {
+            Vertex vertice2 = new Vertex();
+
+            vertice2.X = vertice.X * (1 / (3 - vertice.Z));
+            vertice2.Y = vertice.Y * (1 / (3 - vertice.Z));
+
+            return vertice2;
+        }
+
+        public Vertex scale(Vertex vertice, float magnitude)
+        {
+            Vertex vertice2 = new Vertex();
+
+            vertice2.X = vertice.X * magnitude;
+            vertice2.Y = vertice.Y * magnitude;
+
+            return vertice2;
         }
 
         public void DrawTriangle(float x1, float y1, float x2, float y2, float x3, float y3)
@@ -220,5 +232,131 @@ namespace _3D_Engine_1._0
             g.DrawLine(Pens.Coral, x3, y3, x1, y1);
         }
 
+        public Vertex TranslateToO(Vertex vertice)
+        {
+            Vertex vertice2 = new Vertex();
+            vertice2.X += vertice.X + Wx;
+            vertice2.Y = -vertice.Y + Hy;
+            
+            return vertice2;
+        }
+
+        public Vertex getCenter(Vertex[] vertices)
+        {
+            Vertex center = new Vertex();
+            center.X = (vertices[0].X + vertices[1].X + vertices[2].X) / 3;
+            center.Y = (vertices[0].Y + vertices[1].Y + vertices[2].Y) / 3;
+            center.Z = (vertices[0].Z + vertices[1].Z + vertices[2].Z) / 3;
+
+            return center;
+        }
+
+        public Vertex getNormal(Vertex[] vertices)
+        {
+            float n;
+            Vertex normal = new Vertex();
+            Vertex N = new Vertex();
+
+            Vertex a = new Vertex();
+            Vertex b = new Vertex();
+
+            a.X = vertices[1].X - vertices[2].X;
+            a.Y = vertices[1].Y - vertices[2].Y;
+            a.Z = vertices[1].Z - vertices[2].Z;
+
+            b.X = vertices[0].X - vertices[2].X;
+            b.Y = vertices[0].Y - vertices[2].Y;
+            b.Z = vertices[0].Z - vertices[2].Z;
+
+            N.X = a.Y * b.Z - a.Z * b.Y;
+            N.Y = a.Z * b.X - a.X * b.Z;
+            N.Z = a.X * b.Y - a.Y * b.X;
+
+            n = (float)Math.Sqrt((N.X * N.X) + (N.Y * N.Y) + (N.Z * N.Z));
+            
+            normal.X = N.X/n;
+            normal.Y = N.Y/n;
+            normal.Z = N.Z/n;
+
+            return normal;
+
+        }
+
+        public Vertex getCentroid(Mesh figure)
+        {
+            Vertex centroid = new Vertex();
+            centroid.X = 0;centroid.Y = 0;centroid.Z = 0;
+            int count = 0;
+
+            for(int i = 0; i < figure.triangles.Length; i++)
+            {
+                for(int j = 0; j< 3; i++)
+                {
+                    count++;
+                    centroid.X +=figure.triangles[i].Vertices[j].X;
+                    centroid.Y += figure.triangles[i].Vertices[j].Y;
+                    centroid.Z += figure.triangles[i].Vertices[j].Z;
+                }
+            }
+            centroid.X /= count;
+            centroid.Y /= count;
+            centroid.Z /= count;
+
+            return centroid;
+        }
+
+        public Mesh Sphere(float radius, float segments)
+        {
+            Mesh Sphere = new Mesh();
+            puntosSphere = new List<Vertex>();
+            for(int i = 0; i<segments; i++)
+            {
+                float lon = map(i, 0 , segments, -pi, pi);
+                for(int j = 0; j<segments; j++)
+                {
+                    float lat = map(j, 0, segments, -pi / 2, pi / 2);
+                    Vertex vertex = new Vertex();
+                    vertex.X = radius * (float)Math.Sin(lon) * (float)Math.Cos(lat);
+                    vertex.Y = radius * (float)Math.Sin(lon) * (float)Math.Sin(lat);
+                    vertex.Z = radius * (float)Math.Cos(lon);
+                    puntosSphere.Add(vertex);
+                }
+            }
+
+
+            return Sphere;
+
+        }
+
+        public float map(int segment, float start1, float end1, float start2, float end2)
+        {
+            float output;
+
+            output = start2 +segment*((end2 - start2) / (end1 - start1));
+            return output;
+        }
+
+        /*
+        public Mesh toOrigin(Mesh figure)
+        {
+            Mesh mesh= new Mesh();
+            mesh.triangles = new Triangle[figure.triangles.Length];
+            
+            Vertex vertice2 = new Vertex();
+            Vertex centroid = getCentroid(figure);
+
+            for (int i = 0; i < figure.triangles.Length; i++)
+            {
+                for (int j = 0; j < 3; i++)
+                {
+                     figure.triangles[i].Vertices[j].X - centroid.X;
+                    centroid.Y += figure.triangles[i].Vertices[j].Y;
+                    centroid.Z += figure.triangles[i].Vertices[j].Z;
+                }
+            }
+
+            return vertice2;
+        }
+        */
     }
 }

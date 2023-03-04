@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.PCT_CANVAS = new System.Windows.Forms.PictureBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.angleTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.PCT_CANVAS)).BeginInit();
             this.SuspendLayout();
             // 
@@ -47,19 +48,27 @@
             // timer1
             // 
             this.timer1.Enabled = true;
-            this.timer1.Interval = 40;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // angleTextBox
+            // 
+            this.angleTextBox.Location = new System.Drawing.Point(604, 391);
+            this.angleTextBox.Name = "angleTextBox";
+            this.angleTextBox.Size = new System.Drawing.Size(125, 31);
+            this.angleTextBox.TabIndex = 1;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.angleTextBox);
             this.Controls.Add(this.PCT_CANVAS);
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.PCT_CANVAS)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -67,5 +76,6 @@
 
         private PictureBox PCT_CANVAS;
         private System.Windows.Forms.Timer timer1;
+        private TextBox angleTextBox;
     }
 }
