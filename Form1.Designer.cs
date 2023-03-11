@@ -44,6 +44,7 @@
             this.PCT_CANVAS.Size = new System.Drawing.Size(800, 385);
             this.PCT_CANVAS.TabIndex = 0;
             this.PCT_CANVAS.TabStop = false;
+            this.PCT_CANVAS.Click += new System.EventHandler(this.PCT_CANVAS_Click);
             // 
             // timer1
             // 
